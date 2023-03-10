@@ -14,6 +14,8 @@ pub use games::honkai;
 #[cfg(feature = "star-rail")]
 pub use games::star_rail;
 
+pub mod integrations;
+
 #[cfg(feature = "config")]
 pub mod config;
 
