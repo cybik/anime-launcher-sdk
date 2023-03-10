@@ -96,18 +96,29 @@ pub fn run() -> anyhow::Result<()> {
     let mut bash_command = String::new();
     let mut windows_command = String::new();
 
+    // TODO: this probably creates the actual command. sub with runner path.
+    let mut wine_build = config.game.wine.builds.join(&wine.name);
+    if wine.managed {
+        wine_build = wine.uri.into();
+        bash_command += "env|grep -i Steam;echo '----';env|grep -i Wine;echo '----'; env|grep -i Steam_Compat;echo '----';pwd; "
+    }
+
     if config.game.enhancements.gamemode {
         bash_command += "gamemoderun ";
     }
 
-    let wine_build = config.game.wine.builds.join(&wine.name);
-
     let run_command = features.command
         .map(|command| replace_keywords(command, &config))
         .unwrap_or(format!("'{}'", wine_build.join(wine.files.wine64.unwrap_or(wine.files.wine)).to_string_lossy()));
+    tracing::info!("Initial command: \"{run_command}\"");
 
     bash_command += &run_command;
     bash_command += " ";
+
+    if wine.managed {
+        tracing::warn!("Making it run. Cleanup later.");
+        bash_command += "waitforexitandrun ";
+    }
 
     if let Some(virtual_desktop) = config.game.wine.virtual_desktop.get_command() {
         windows_command += &virtual_desktop;
@@ -152,9 +163,10 @@ pub fn run() -> anyhow::Result<()> {
     command.arg(&bash_command);
 
     // Setup environment
-
-    command.env("WINEARCH", "win64");
-    command.env("WINEPREFIX", &config.game.wine.prefix);
+    if !wine.managed { // will be moved. for now, override here to let proton do its magicks
+        command.env("WINEARCH", "win64");
+        command.env("WINEPREFIX", &config.game.wine.prefix);
+    }
 
     // Add environment flags for selected wine
     for (key, value) in features.env.into_iter() {
@@ -184,7 +196,6 @@ pub fn run() -> anyhow::Result<()> {
     command.envs(config.game.environment);
 
     // Run command
-
     let variables = command
         .get_envs()
         .map(|(key, value)| format!("{}=\"{}\"", key.to_string_lossy(), value.unwrap_or_default().to_string_lossy()))
