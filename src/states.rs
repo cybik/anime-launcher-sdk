@@ -206,7 +206,7 @@ impl LauncherState {
         #[cfg(feature = "components")]
         {
             if let Some(wine) = config.get_selected_wine()? {
-                if !config.game.wine.builds.join(&wine.name).exists() {
+                if !config.game.wine.builds.join(&wine.name).exists() && !wine.managed {
                     return Ok(Self::WineNotInstalled);
                 }
 

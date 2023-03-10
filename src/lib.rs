@@ -5,6 +5,8 @@ pub use wincompatlib;
 
 pub mod consts;
 
+pub mod integrations;
+
 #[cfg(feature = "config")]
 pub mod config;
 
