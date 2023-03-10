@@ -9,6 +9,8 @@ pub mod genshin;
 #[cfg(feature = "honkai")]
 pub mod honkai;
 
+pub mod integrations;
+
 #[cfg(feature = "config")]
 pub mod config;
 
