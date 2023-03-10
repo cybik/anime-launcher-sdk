@@ -17,7 +17,8 @@ pub struct Group {
     pub name: String,
     pub title: String,
     pub features: Option<Features>,
-    pub versions: Vec<Version>
+    pub versions: Vec<Version>,
+    pub managed: bool
 }
 
 impl Group {
@@ -69,7 +70,9 @@ pub struct Features {
     /// - `%game%` - path to the game
     pub env: HashMap<String, String>,
 
-    pub recommended: bool
+    pub recommended: bool,
+    /// Managed prefix. Not set unless using the Steam variance.
+    pub managed_prefix: Option<PathBuf>
 }
 
 impl Default for Features {
@@ -81,7 +84,8 @@ impl Default for Features {
             compact_launch: false,
             command: None,
             env: HashMap::new(),
-            recommended: true
+            recommended: true,
+            managed_prefix: None
         }
     }
 }
@@ -116,6 +120,8 @@ impl From<&JsonValue> for Features {
                 None => default.command
             },
 
+            managed_prefix: None, // never set by the configuration.
+
             env: match value.get("env") {
                 Some(value) => {
                     if let Some(object) = value.as_object() {
@@ -148,6 +154,7 @@ pub struct Version {
     pub title: String,
     pub uri: String,
     pub files: Files,
+    pub managed: bool,
     pub features: Option<Features>
 }
 
@@ -227,7 +234,10 @@ impl Version {
     /// 
     /// `wine_folder` should point to the folder with wine binaries, so e.g. `/path/to/runners/wine-proton-ge-7.11`
     pub fn to_wine<T: Into<PathBuf>>(&self, components: T, wine_folder: Option<T>) -> UnifiedWine {
-        let wine_folder = wine_folder.map(|folder| folder.into()).unwrap_or_default();
+        let mut wine_folder = wine_folder.map(|folder| folder.into()).unwrap_or_default();
+        if self.managed {
+            wine_folder = PathBuf::from(&self.uri); // known case: if the proton install is managed, the URI is actually the local install.
+        }
 
         let (wine, arch) = match self.files.wine64.as_ref() {
             Some(wine) => (wine, WineArch::Win64),
@@ -250,10 +260,13 @@ impl Version {
 
         if let Ok(Some(features)) = self.features(components) {
             if let Some(Bundle::Proton) = features.bundle {
-                let mut proton = Proton::new(wine_folder, None);
+                let mut proton = Proton::new(wine_folder, features.managed_prefix.clone());
 
                 // Small workaround. Most of stuff will work with just this
-                proton.steam_client_path = Some(PathBuf::from(""));
+                match features.managed_prefix {
+                    Some(_) => proton.steam_client_path = Some(PathBuf::from("")),
+                    None => {}
+                }
 
                 return UnifiedWine::Proton(proton);
             }
@@ -295,6 +308,11 @@ pub fn get_downloaded<T: Into<PathBuf>>(components: T, folder: T) -> anyhow::Res
     let folder: PathBuf = folder.into();
 
     for mut group in get_groups(components)? {
+        if group.managed {
+            // special case: Runners are externally managed.
+            downloaded.push(group);
+            continue;
+        }
         group.versions.retain(|version| folder.join(&version.name).exists());
 
         if !group.versions.is_empty() {

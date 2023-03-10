@@ -17,6 +17,8 @@ pub use games::honkai;
 #[cfg(feature = "pgr")]
 pub use games::pgr;
 
+pub mod integrations;
+
 #[cfg(feature = "config")]
 pub mod config;
 
