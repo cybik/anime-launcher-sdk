@@ -205,7 +205,9 @@ impl Config {
     /// 3) `Err(..)` if failed to get selected wine version
     pub fn get_selected_wine(&self) -> anyhow::Result<Option<wine::Version>> {
         match &self.game.wine.selected {
-            Some(selected) => wine::Version::find_in(&self.components.path, selected),
+            Some(selected) => {
+                wine::Version::find_in(&self.components.path, selected)
+            },
             None => Ok(None)
         }
     }
