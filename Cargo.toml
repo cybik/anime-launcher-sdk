@@ -22,6 +22,7 @@ wincompatlib = { version = "0.2", optional = true }
 lazy_static = { version = "1.4", optional = true }
 md-5 = { version = "0.10", features = ["asm"], optional = true }
 discord-rich-presence = { version = "0.2.3", optional = true }
+steamlocate = "1.1.1"
 
 [features]
 states = []

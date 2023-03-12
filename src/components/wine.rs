@@ -12,7 +12,8 @@ pub struct Group {
     pub name: String,
     pub title: String,
     pub features: Features,
-    pub versions: Vec<Version>
+    pub versions: Vec<Version>,
+    pub managed: bool
 }
 
 impl Group {
@@ -224,6 +225,18 @@ pub struct Files {
     pub winecfg: Option<String>
 }
 
+impl Default for Files {
+    fn default() -> Self {
+        Self {
+            wine: "".to_string(),
+            wine64: None,
+            wineserver: None,
+            wineboot: None,
+            winecfg: None
+        }
+    }
+}
+
 pub fn get_groups<T: Into<PathBuf>>(components: T) -> anyhow::Result<Vec<Group>> {
     ComponentsLoader::new(components).get_wine_versions()
 }
@@ -235,6 +248,11 @@ pub fn get_downloaded<T: Into<PathBuf>>(components: T, folder: T) -> anyhow::Res
     let folder: PathBuf = folder.into();
 
     for mut group in get_groups(components)? {
+        if group.managed == true {
+            // special case: Runners are externally managed.
+            downloaded.push(group);
+            continue;
+        }
         group.versions = group.versions.into_iter()
             .filter(|version| folder.join(&version.name).exists())
             .collect();
