@@ -88,12 +88,12 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<wine::Group>> {
             name: split.get(1).expect("Should really be set right now").trim().to_string(),   // clarify
             title: name.clone().trim().to_string(),  // clarify
             uri: (&path.to_str().unwrap()).trim().to_string(), // clarify
-            files: wine::Files {
-                wine: "files/bin/wine".to_string(),
-                wine64: Some("files/bin/wine64".to_string()),
-                wineserver: Some("files/bin/wineserver".to_string()),
-                winecfg: Some("files/lib64/wine/x86_64-windows/winecfg.exe".to_string()),
-                wineboot: None // ehe
+            files: wine::Files { // handled by wincompatlib
+                wine: "".to_string(),
+                wine64: None,
+                wineserver: None,
+                winecfg: None,
+                wineboot: None
             },
             features: None,
             managed: true
@@ -103,17 +103,7 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<wine::Group>> {
     wine_groups.push(wine::Group {
         name:"steam-proton".to_string(),
         title:"Proton Runners via Steam".to_string(),
-        features: wine::Features {
-            need_dxvk: false,
-            compact_launch: true,
-            command: Some("python3 '%build%/proton' waitforexitandrun".to_string()),
-            prefix_subdir: Some("pfx".to_string()),
-            env: [
-                ("STEAM_COMPAT_DATA_PATH".to_string(), "%prefix%".to_string()),
-                ("STEAM_COMPAT_CLIENT_INSTALL_PATH".to_string(), "".to_string()),
-                ("SteamAppId".to_string(), "0".to_string())
-            ].iter().cloned().collect()
-        },
+        features: None, // handled
         versions: wines,
         managed: true
     });

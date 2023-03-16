@@ -81,7 +81,7 @@ pub fn get_wine_versions(index: &Path) -> anyhow::Result<Vec<wine::Group>> {
                         name,
                         title,
                         features: group.get("features").map(|v| v.into()),
-                        versions: wine_versions
+                        versions: wine_versions,
                         managed: false
                     });
                 }

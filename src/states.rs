@@ -178,11 +178,6 @@ impl LauncherState {
             }
         }
 
-        let true_prefix = match config.get_selected_wine() {
-            Ok(Some(version)) => version.prefix_path(&config.components.path, config.game.wine.prefix.clone()),
-            _ => config.game.wine.prefix.clone()
-        };
-
         let mut voices = Vec::with_capacity(config.game.voices.len());
 
         for voice in config.game.voices {
@@ -192,6 +187,6 @@ impl LauncherState {
             });
         }
 
-        Self::get(true_prefix, config.game.path, voices, config.patch.servers, status)
+        Self::get(wine_prefix, config.game.path, voices, config.patch.servers, status)
     }
 }
