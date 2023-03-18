@@ -73,6 +73,7 @@ impl LauncherState {
         let game_path = game_path.into();
 
         // Check prefix existence
+        tracing::debug!("Fuck off prefix {0}", wine_prefix.display());
         if !wine_prefix.join("drive_c").exists() {
             return Ok(Self::PrefixNotExists);
         }
@@ -154,7 +155,7 @@ impl LauncherState {
         #[cfg(feature = "components")]
         {
             if let Some(wine) = config.get_selected_wine()? {
-                if !config.game.wine.builds.join(&wine.name).exists() {
+                if !config.game.wine.builds.join(&wine.name).exists() && !wine.managed {
                     return Ok(Self::WineNotInstalled);
                 }
 
@@ -164,10 +165,12 @@ impl LauncherState {
 
                 match wine {
                     WincompatlibWine::Default(wine) => if let Some(prefix) = wine.prefix {
+                        tracing::debug!("Setting Wine Prefix");
                         wine_prefix = prefix;
                     }
 
                     WincompatlibWine::Proton(proton) => if let Some(prefix) = proton.wine().prefix.clone() {
+                        tracing::debug!("Setting Proton Prefix");
                         wine_prefix = prefix;
                     }
                 }

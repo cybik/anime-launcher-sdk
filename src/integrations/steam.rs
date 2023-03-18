@@ -2,6 +2,7 @@ use steamlocate::*;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use crate::components;
 use crate::components::wine;
 
 /// Identify whether we were launched through a Steam environment.
@@ -65,6 +66,14 @@ fn filter_local_roots_by_proton_launcher() -> Vec<PathBuf> {
 pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<wine::Group>> {
     let mut wines: Vec<wine::Version> = Vec::new();
 
+    let mut proton_features = components::wine::Features::default();
+    proton_features.bundle = Some(components::wine::Bundle::Proton);
+    match env::var_os("STEAM_COMPAT_DATA_PATH") {
+        Some(val) => {
+            proton_features.managed_prefix = Some(PathBuf::from(val));
+        },
+        None => {}
+    };
     for path in filter_local_roots_by_proton_launcher() {
         let version_file = fs::read_to_string(path.join("version"))
             .expect("Should have been able to read the file");
@@ -95,7 +104,7 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<wine::Group>> {
                 winecfg: None,
                 wineboot: None
             },
-            features: None,
+            features: Some(proton_features.clone()), // handled
             managed: true
         });
     }
@@ -103,7 +112,7 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<wine::Group>> {
     wine_groups.push(wine::Group {
         name:"steam-proton".to_string(),
         title:"Proton Runners via Steam".to_string(),
-        features: None, // handled
+        features: Some(proton_features.clone()), // handled
         versions: wines,
         managed: true
     });

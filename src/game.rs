@@ -101,11 +101,13 @@ pub fn run() -> anyhow::Result<()> {
         bash_command += "gamemoderun ";
     }
 
+    // TODO: this probably creates the actual command. sub with runner path.
     let wine_build = config.game.wine.builds.join(&wine.name);
 
     let run_command = features.command
         .map(|command| replace_keywords(command, &config))
         .unwrap_or(format!("'{}'", wine_build.join(wine.files.wine64.unwrap_or(wine.files.wine)).to_string_lossy()));
+    tracing::info!("Initial command: \"{run_command}\"");
 
     bash_command += &run_command;
     bash_command += " ";
@@ -185,7 +187,7 @@ pub fn run() -> anyhow::Result<()> {
     command.envs(config.game.environment);
 
     // Run command
-
+    // TODO: restore this. Commented only to skip setting these with Steam to let proton inherit everything.
     let variables = command
         .get_envs()
         .map(|(key, value)| format!("{}=\"{}\"", key.to_string_lossy(), value.unwrap_or_default().to_string_lossy()))

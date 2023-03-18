@@ -65,7 +65,10 @@ pub struct Features {
     /// - `%temp%` - path to temp folder specified in config file
     /// - `%launcher%` - path to launcher folder
     /// - `%game%` - path to the game
-    pub env: HashMap<String, String>
+    pub env: HashMap<String, String>,
+
+    /// Managed prefix. Not set unless using the Steam variance.
+    pub managed_prefix: Option<PathBuf>
 }
 
 impl Default for Features {
@@ -75,7 +78,8 @@ impl Default for Features {
             need_dxvk: true,
             compact_launch: false,
             command: None,
-            env: HashMap::new()
+            env: HashMap::new(),
+            managed_prefix: None
         }
     }
 }
@@ -109,6 +113,8 @@ impl From<&JsonValue> for Features {
                 Some(value) => value.as_str().map(|value| value.to_string()),
                 None => default.command
             },
+
+            managed_prefix: None, // never set by the configuration.
 
             env: match value.get("env") {
                 Some(value) => {
@@ -247,7 +253,8 @@ impl Version {
 
         if let Ok(Some(features)) = self.features(components) {
             if let Some(Bundle::Proton) = features.bundle {
-                return WincompatlibWine::Proton(Proton::new(wine_folder, None));
+                tracing::debug!("Proton detected mpfx {0} :: wf {1}", features.managed_prefix.clone().unwrap().display(), wine_folder.clone().display());
+                return WincompatlibWine::Proton(Proton::new(wine_folder, features.managed_prefix));
             }
         }
 
