@@ -159,8 +159,15 @@ pub struct Version {
 }
 
 impl Version {
-    #[inline]
+    pub fn get_runner_dir<T: Into<PathBuf>>(&self, builds_dir: T) -> PathBuf {
+        if self.managed {
+            return self.uri.clone().into();
+        }
+        return builds_dir.into().join(&self.name);
+    }
+
     /// Get latest recommended wine version
+    #[inline]
     pub fn latest<T: Into<PathBuf>>(components: T) -> anyhow::Result<Self> {
         Ok(get_groups(components)?[0].versions[0].clone())
     }
