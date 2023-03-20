@@ -112,9 +112,6 @@ pub fn run() -> anyhow::Result<()> {
 
     // TODO: this probably creates the actual command. sub with runner path.
     let wine_build = wine.get_runner_dir(&config.game.wine.builds);
-    if wine.managed {
-        bash_command += "env|grep -i Steam;echo '----';env|grep -i Wine;echo '----'; env|grep -i Steam_Compat;echo '----';pwd; ";
-    }
 
     if config.game.enhancements.gamemode {
         bash_command += "gamemoderun ";
