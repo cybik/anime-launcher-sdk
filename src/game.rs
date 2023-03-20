@@ -97,10 +97,9 @@ pub fn run() -> anyhow::Result<()> {
     let mut windows_command = String::new();
 
     // TODO: this probably creates the actual command. sub with runner path.
-    let mut wine_build = config.game.wine.builds.join(&wine.name);
+    let wine_build = wine.get_runner_dir(&config.game.wine.builds);
     if wine.managed {
-        wine_build = wine.uri.into();
-        bash_command += "env|grep -i Steam;echo '----';env|grep -i Wine;echo '----'; env|grep -i Steam_Compat;echo '----';pwd; "
+        bash_command += "env|grep -i Steam;echo '----';env|grep -i Wine;echo '----'; env|grep -i Steam_Compat;echo '----';pwd; ";
     }
 
     if config.game.enhancements.gamemode {
