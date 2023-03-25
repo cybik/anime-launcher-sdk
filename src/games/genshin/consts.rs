@@ -1,5 +1,10 @@
 use std::path::PathBuf;
 
+use std::env;
+use std::fs;
+
+/// Timeout used by `anime_game_core::telemetry::is_disabled` to check acessibility of telemetry servers
+pub const TELEMETRY_CHECK_TIMEOUT: Option<u64> = Some(3);
 pub const FOLDER_NAME: &str = "anime-game-launcher";
 
 /// Get default launcher dir path
