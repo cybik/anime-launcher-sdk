@@ -1,16 +1,22 @@
 use std::path::PathBuf;
 
+use std::env;
+use std::fs;
+
 /// Timeout used by `anime_game_core::telemetry::is_disabled` to check acessibility of telemetry servers
 pub const TELEMETRY_CHECK_TIMEOUT: Option<u64> = Some(3);
 
 /// Get default launcher dir path
 /// 
 /// `$HOME/.local/share/anime-game-launcher`
-#[inline]
+//#[inline]
 pub fn launcher_dir() -> anyhow::Result<PathBuf> {
-    Ok(std::env::var("XDG_DATA_HOME")
-        .or_else(|_| std::env::var("HOME").map(|home| home + "/.local/share"))
-        .map(|home| PathBuf::from(home).join("anime-game-launcher"))?)
+    let configext = env::current_exe().ok().unwrap().parent().unwrap().join(".configext");
+    let mut configname = String::from("anime-game-launcher");
+    if configext.exists() {
+        configname += &fs::read_to_string(configext).ok().unwrap();
+    }
+    Ok(dirs::data_dir().map(|dir| dir.join(configname)))
 }
 
 /// Get default config file path
