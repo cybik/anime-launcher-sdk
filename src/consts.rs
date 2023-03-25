@@ -1,6 +1,9 @@
 use std::time::Duration;
 use std::path::PathBuf;
 
+use std::env;
+use std::fs;
+
 /// Timeout used by `anime_game_core::telemetry::is_disabled` to check acessibility of telemetry servers
 pub const TELEMETRY_CHECK_TIMEOUT: Option<Duration> = Some(Duration::from_secs(3));
 
@@ -10,9 +13,14 @@ pub const PATCH_FETCHING_TIMEOUT: Option<Duration> = Some(Duration::from_secs(5)
 /// Get default launcher dir path
 /// 
 /// `$HOME/.local/share/anime-game-launcher`
-#[inline]
+//#[inline]
 pub fn launcher_dir() -> Option<PathBuf> {
-    dirs::data_dir().map(|dir| dir.join("anime-game-launcher"))
+    let configext = env::current_exe().ok().unwrap().parent().unwrap().join(".configext");
+    let mut configname = String::from("anime-game-launcher");
+    if configext.exists() {
+        configname += &fs::read_to_string(configext).ok().unwrap();
+    }
+    dirs::data_dir().map(|dir| dir.join(configname))
 }
 
 /// Get default config file path
