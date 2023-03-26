@@ -33,6 +33,20 @@ pub fn is_prefix_update_disabled() -> bool {
     launched_from_steam()
 }
 
+pub fn default_window_size_width(default: i32) -> i32 {
+    if is_steam_deck() {
+        return 1280
+    }
+    return default
+}
+
+pub fn default_window_size_height(default: i32) -> i32 {
+    if is_steam_deck() {
+        return 800
+    }
+    return default
+}
+
 /// Generate a list of Steam-inventoried search roots.
 fn get_local_search_roots() -> Vec<PathBuf> {
     // initialize and let Steam seed itself.
