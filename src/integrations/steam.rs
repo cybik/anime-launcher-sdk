@@ -29,6 +29,10 @@ pub fn is_steam_os() -> bool {
     };
 }
 
+pub fn is_prefix_update_disabled() -> bool {
+    launched_from_steam()
+}
+
 /// Generate a list of Steam-inventoried search roots.
 fn get_local_search_roots() -> Vec<PathBuf> {
     // initialize and let Steam seed itself.
