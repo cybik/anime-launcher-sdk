@@ -75,9 +75,14 @@ pub struct LauncherStateParams<F: Fn(StateUpdating)> {
 impl LauncherState {
     pub fn get<F: Fn(StateUpdating)>(params: LauncherStateParams<F>) -> anyhow::Result<Self> {
         tracing::debug!("Trying to get launcher state");
+        let mut managed = false;
+        let config = crate::config::get()?;
 
+        if let Some(wine) = config.get_selected_wine()? {
+            managed = wine.managed;
+        }
         // Check prefix existence
-        if !params.wine_prefix.join("drive_c").exists() {
+        if !params.wine_prefix.join("drive_c").exists() && !managed {
             return Ok(Self::PrefixNotExists);
         }
 
