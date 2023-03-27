@@ -8,7 +8,6 @@ use enum_ordinalize::Ordinalize;
 use anime_game_core::genshin::consts::GameEdition as CoreGameEdition;
 
 use crate::consts::launcher_dir;
-use anime_launcher_sdk::integrations::steam;
 
 pub mod repairer;
 
@@ -77,7 +76,7 @@ pub enum LauncherStyle {
 impl Default for LauncherStyle {
     fn default() -> Self {
         if steam::is_steam_deck() {
-            Self::Classic
+            return Self::Classic;
         }
         Self::Modern
     }
