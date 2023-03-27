@@ -37,9 +37,6 @@ pub enum LauncherStyle {
 impl Default for LauncherStyle {
     #[inline]
     fn default() -> Self {
-        if steam::is_steam_deck() {
-            return Self::Classic;
-        }
         Self::Modern
     }
 }
