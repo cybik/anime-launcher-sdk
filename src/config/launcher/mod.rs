@@ -8,6 +8,7 @@ use enum_ordinalize::Ordinalize;
 use anime_game_core::genshin::consts::GameEdition as CoreGameEdition;
 
 use crate::consts::launcher_dir;
+use anime_launcher_sdk::integrations::steam;
 
 #[cfg(feature = "environment-emulation")]
 use crate::env_emulation::Environment;
@@ -26,6 +27,7 @@ pub mod prelude {
 }
 
 use prelude::*;
+use crate::integrations::steam;
 
 #[derive(Ordinalize, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GameEdition {
@@ -77,6 +79,9 @@ pub enum LauncherStyle {
 
 impl Default for LauncherStyle {
     fn default() -> Self {
+        if steam::is_steam_deck() {
+            Self::Classic
+        }
         Self::Modern
     }
 }
