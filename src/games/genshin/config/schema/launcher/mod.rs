@@ -26,7 +26,6 @@ pub mod prelude {
 }
 
 use prelude::*;
-use crate::integrations::steam;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Ordinalize, Serialize, Deserialize)]
 pub enum LauncherStyle {
