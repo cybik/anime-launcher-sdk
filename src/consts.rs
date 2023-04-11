@@ -16,7 +16,7 @@ pub fn launcher_dir() -> anyhow::Result<PathBuf> {
     if configext.exists() {
         configname += &fs::read_to_string(configext).ok().unwrap();
     }
-    Ok(dirs::data_dir().map(|dir| dir.join(configname)))
+    Ok(dirs::data_dir().map(|dir| dir.join(configname)).unwrap())
 }
 
 /// Get default config file path

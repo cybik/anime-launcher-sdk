@@ -26,7 +26,6 @@ pub mod prelude {
 }
 
 use prelude::*;
-use crate::integrations::steam;
 
 #[derive(Ordinalize, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GameEdition {
