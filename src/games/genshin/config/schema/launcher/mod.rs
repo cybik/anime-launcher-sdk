@@ -12,7 +12,7 @@ use crate::genshin::consts::launcher_dir;
 
 use crate::consts::launcher_dir;
 
-use anime_launcher_sdk::integrations::steam;
+use crate::integrations::steam;
 
 #[cfg(feature = "environment-emulation")]
 use crate::genshin::env_emulation::Environment;
