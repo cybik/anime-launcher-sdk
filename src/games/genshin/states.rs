@@ -202,7 +202,7 @@ impl LauncherState {
 
         match &config.game.wine.selected {
             #[cfg(feature = "components")]
-            Some(selected) if (!config.game.wine.builds.join(selected).exists() && !wine.managed) => return Ok(Self::WineNotInstalled),
+            Some(selected) if (!config.game.wine.builds.join(selected).exists() && !selected.managed) => return Ok(Self::WineNotInstalled),
             None => return Ok(Self::WineNotInstalled),
             _ => ()
         }
