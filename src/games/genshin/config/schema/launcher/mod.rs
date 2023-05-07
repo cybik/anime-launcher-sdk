@@ -10,7 +10,7 @@ use anime_game_core::genshin::consts::GameEdition;
 use crate::config::schema_blanks::prelude::*;
 use crate::genshin::consts::launcher_dir;
 
-use crate::consts::launcher_dir;
+use anime_game_core::genshin::consts::launcher_dir;
 
 use crate::integrations::steam;
 
