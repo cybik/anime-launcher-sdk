@@ -68,6 +68,10 @@ pub fn run() -> anyhow::Result<()> {
         game: config.game.path.for_edition(config.launcher.edition).to_path_buf(),
         temp: config.launcher.temp.clone().unwrap_or(std::env::temp_dir())
     };
+    if wine.managed {
+        // TODO: this probably creates the actual command. sub with runner path.
+        folders.wine = wine.get_runner_dir(&config.game.wine.builds);
+    }
 
     // Check telemetry servers
 
@@ -135,9 +139,6 @@ pub fn run() -> anyhow::Result<()> {
     let mut bash_command = String::new();
     let mut windows_command = String::new();
 
-    // TODO: this probably creates the actual command. sub with runner path.
-    let wine_build = wine.get_runner_dir(&config.game.wine.builds);
-
     if config.game.enhancements.gamemode {
         bash_command += "gamemoderun ";
     }
@@ -145,6 +146,7 @@ pub fn run() -> anyhow::Result<()> {
     let run_command = features.command
         .map(|command| replace_keywords(command, &folders))
         .unwrap_or(format!("'{}'", folders.wine.join(wine.files.wine64.unwrap_or(wine.files.wine)).to_string_lossy()));
+    tracing::info!("Initial command: \"{run_command}\"");
 
     bash_command += &run_command;
     bash_command += " ";
