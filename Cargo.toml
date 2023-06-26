@@ -18,6 +18,8 @@ features = ["all"]
 anyhow = { version = "1.0", features = ["backtrace"] }
 tracing = "0.1"
 
+dirs = "5.0.0"
+
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde_json = { version = "1.0", optional = true }
 
@@ -28,6 +30,7 @@ wincompatlib = { version = "0.7.3", features = ["all"], optional = true }
 lazy_static = { version = "1.4", optional = true }
 md-5 = { version = "0.10", features = ["asm"], optional = true }
 discord-rich-presence = { version = "0.2.3", optional = true }
+steamlocate = "1.1.1"
 
 [features]
 genshin = ["anime-game-core/genshin"]
@@ -51,6 +54,7 @@ game = ["components", "config"]
 discord-rpc = ["dep:discord-rich-presence"]
 sandbox = []
 sessions = []
+integrations = []
 
 # Genshin-specific features
 environment-emulation = []
@@ -65,7 +69,8 @@ all = [
     "sandbox",
     "sessions",
     "environment-emulation",
-    "fps-unlocker"
+    "fps-unlocker",
+    "integrations"
 ]
 
 default = ["all"]
