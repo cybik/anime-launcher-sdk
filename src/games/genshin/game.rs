@@ -74,7 +74,11 @@ pub fn run() -> anyhow::Result<()> {
     tracing::info!("Checking telemetry");
 
     if let Ok(Some(server)) = telemetry::is_disabled(config.launcher.edition) {
-        return Err(anyhow::anyhow!("Telemetry server is not disabled: {server}"));
+        if config.patch.apply {
+            return Err(anyhow::anyhow!("Telemetry server is not disabled: {server}"));
+        } else {
+            tracing::warn!("Telemetry server is not disabled ({server}) but patch is disabled.");
+        }
     }
 
     // Prepare fps unlocker
