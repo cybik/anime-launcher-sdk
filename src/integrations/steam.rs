@@ -12,11 +12,33 @@ pub enum LaunchedFrom {
     Independent
 }
 
-pub fn launched_from() -> LaunchedFrom {
-    if launched_from_steam() || (is_steam_deck() || is_steam_os()) {
-        return LaunchedFrom::Steam;
+#[derive(Debug, Clone, PartialEq)]
+pub enum Steam {
+    Desktop,
+    Deck,
+    OS,
+    /// ...
+    Invalid
+}
+
+pub fn environment() -> Steam {
+    if launched_from_steam() {
+        if is_steam_os() {
+            if is_steam_deck() {
+                return Steam::Deck;
+            }
+            return Steam::OS;
+        }
+        return Steam::Desktop;
     }
-    LaunchedFrom::Independent
+    return Steam::Invalid;
+}
+
+pub fn launched_from() -> LaunchedFrom {
+    if environment() == Steam::Invalid {
+        return LaunchedFrom::Independent;
+    }
+    LaunchedFrom::Steam
 }
 
 /// Identify whether we were launched through a Steam environment.
@@ -51,17 +73,17 @@ pub fn is_prefix_update_disabled() -> bool {
 }
 
 pub fn default_window_size_width(default: i32) -> i32 {
-    if is_steam_deck() {
-        return 1280
+    match is_steam_deck() {
+        true => 1280,
+        false => default
     }
-    return default
 }
 
 pub fn default_window_size_height(default: i32) -> i32 {
-    if is_steam_deck() {
-        return 800
+    match is_steam_deck() {
+        true => 800,
+        false => default
     }
-    return default
 }
 
 /// Generate a list of Steam-inventoried search roots.
