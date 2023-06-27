@@ -183,10 +183,10 @@ impl ComponentsLoader {
     /// Try to get wine versions from components index
     pub fn get_wine_versions(&self) -> anyhow::Result<Vec<wine::Group>> {
         // TODO: seems like the right spot to hijack the versions and inject the steam environment.
-        if steam::launched_from_steam() {
-            return get_local_proton_versions(&self.folder);
+        match steam::launched_from() {
+            steam::LaunchedFrom::Steam => get_local_proton_versions(&self.folder),
+            steam::LaunchedFrom::Independent => get_wine_versions(&self.folder)
         }
-        get_wine_versions(&self.folder)
     }
 
     #[inline]

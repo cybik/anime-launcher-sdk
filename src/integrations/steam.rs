@@ -5,8 +5,22 @@ use std::path::PathBuf;
 use crate::components;
 use crate::components::wine;
 
+#[derive(Debug, Clone)]
+pub enum LaunchedFrom {
+    Steam,
+    // TODO: Heroic?
+    Independent
+}
+
+pub fn launched_from() -> LaunchedFrom {
+    if launched_from_steam() || (is_steam_deck() || is_steam_os()) {
+        return LaunchedFrom::Steam;
+    }
+    LaunchedFrom::Independent
+}
+
 /// Identify whether we were launched through a Steam environment.
-pub fn launched_from_steam() -> bool {
+fn launched_from_steam() -> bool {
     match env::var_os("SteamEnv") {
         Some(val) => return val == "1",
         None => return false
@@ -14,7 +28,7 @@ pub fn launched_from_steam() -> bool {
 }
 
 /// Identify whether we are running on Steam Deck.
-pub fn is_steam_deck() -> bool {
+fn is_steam_deck() -> bool {
     match env::var_os("SteamDeck") {
         Some(val) => return val == "1",
         None => return false
@@ -22,7 +36,7 @@ pub fn is_steam_deck() -> bool {
 }
 
 /// Identify whether we were launched through a SteamOS environment.
-pub fn is_steam_os() -> bool {
+fn is_steam_os() -> bool {
     match env::var_os("SteamOS") {
         Some(val) => return val == "1",
         None => return false
@@ -30,7 +44,10 @@ pub fn is_steam_os() -> bool {
 }
 
 pub fn is_prefix_update_disabled() -> bool {
-    launched_from_steam()
+    match launched_from() {
+        LaunchedFrom::Steam => true,
+        LaunchedFrom::Independent => false
+    }
 }
 
 pub fn default_window_size_width(default: i32) -> i32 {
