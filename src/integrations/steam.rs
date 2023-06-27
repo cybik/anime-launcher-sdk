@@ -181,7 +181,7 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<wine::Group>> {
 /// Get a list of Proton paths to sleuth into.
 pub fn steam_proton_installed_paths() -> Option<Vec<PathBuf>> {
     if !launched_from_steam() || SteamDir::locate().is_none() {
-        None
+        return None
     }
     Some(filter_local_roots_by_proton_launcher())
 }
