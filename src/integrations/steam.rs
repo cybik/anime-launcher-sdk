@@ -22,16 +22,16 @@ pub enum Steam {
 }
 
 pub fn environment() -> Steam {
-    if launched_from_steam() {
-        if is_steam_os() {
-            if is_steam_deck() {
-                return Steam::Deck;
-            }
-            return Steam::OS;
-        }
-        return Steam::Desktop;
+    match launched_from_steam() {
+        true => match is_steam_os() {
+            true => match is_steam_deck() {
+                true => Steam::Deck,
+                false => Steam::OS
+            },
+            false => Steam::Desktop
+        },
+        false => Steam::Invalid
     }
-    return Steam::Invalid;
 }
 
 pub fn launched_from() -> LaunchedFrom {
@@ -43,25 +43,25 @@ pub fn launched_from() -> LaunchedFrom {
 
 /// Identify whether we were launched through a Steam environment.
 fn launched_from_steam() -> bool {
-    match env::var_os("SteamEnv") {
-        Some(val) => return val == "1",
-        None => return false
+    return match env::var_os("SteamEnv") {
+        Some(val) => val == "1",
+        None => false
     };
 }
 
 /// Identify whether we are running on Steam Deck.
 fn is_steam_deck() -> bool {
-    match env::var_os("SteamDeck") {
-        Some(val) => return val == "1",
-        None => return false
+    return match env::var_os("SteamDeck") {
+        Some(val) => val == "1",
+        None => false
     };
 }
 
 /// Identify whether we were launched through a SteamOS environment.
 fn is_steam_os() -> bool {
-    match env::var_os("SteamOS") {
-        Some(val) => return val == "1",
-        None => return false
+    return match env::var_os("SteamOS") {
+        Some(val) => val == "1",
+        None => false
     };
 }
 
@@ -180,11 +180,8 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<wine::Group>> {
 
 /// Get a list of Proton paths to sleuth into.
 pub fn steam_proton_installed_paths() -> Option<Vec<PathBuf>> {
-    if !launched_from_steam() {
+    if !launched_from_steam() || SteamDir::locate().is_none() {
         None
-    } else if SteamDir::locate().is_none() {
-        None
-    } else {
-        Some(filter_local_roots_by_proton_launcher())
     }
+    Some(filter_local_roots_by_proton_launcher())
 }
