@@ -80,8 +80,9 @@ pub fn default_window_size_height(default: i32) -> i32 {
         false => default
     }
 }
+
 /// Generate a list of Steam-inventoried search roots.
-fn get_library_search_roots() -> Option<Vec<PathBuf>> {
+fn get_steam_search_roots() -> Option<Vec<PathBuf>> {
     // initialize and let Steam seed itself.
     match SteamDir::locate() {
         Some(mut steam_install_dir) => {
@@ -126,7 +127,7 @@ fn check_root(local: PathBuf) -> Option<Vec<PathBuf>> {
 /// Inventory all possible Proton launchers in search roots.
 fn filter_local_roots_by_proton_launcher() -> Option<Vec<PathBuf>> {
     let mut _processed: Vec<PathBuf> = Vec::new();
-    match get_library_search_roots() {
+    match get_steam_search_roots() {
         None => { },
         Some(_locals) => {
             for _local in _locals {
