@@ -149,10 +149,17 @@ fn get_split_names(path: PathBuf) -> (Option<String>, Option<String>) {
                 false => {
                     match path.file_name() {
                         Some(file_path) => match file_path.to_str() {
-                            Some(path_name) => (
-                                Some(path_name.trim().to_string()),
-                                Some(proton_name.trim().to_string())
-                            ),
+                            Some(path_name) => {
+                                tracing::debug!(
+                                    "Identified {:?} {:?}",
+                                    path_name.trim().to_string(),
+                                    proton_name.trim().to_string()
+                                );
+                                (
+                                    Some(path_name.trim().to_string()),
+                                    Some(proton_name.trim().to_string())
+                                )
+                            },
                             None => (None, None)
                         },
                         None => (None, None)
