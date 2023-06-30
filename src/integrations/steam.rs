@@ -150,7 +150,8 @@ fn get_split_names(path: PathBuf) -> (Option<String>, Option<String>) {
                     match path.file_name() {
                         Some(file_path) => match file_path.to_str() {
                             Some(path_name) => (
-                                Some(path_name.to_string()), Some(proton_name.to_string())
+                                Some(path_name.trim().to_string()),
+                                Some(proton_name.trim().to_string())
                             ),
                             None => (None, None)
                         },
