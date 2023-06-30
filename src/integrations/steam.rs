@@ -40,28 +40,26 @@ pub fn launched_from() -> LaunchedFrom {
     LaunchedFrom::Steam
 }
 
-/// Identify whether we were launched through a Steam environment.
-fn launched_from_steam() -> bool {
-    match env::var_os("SteamEnv") {
-        Some(val) => val == "1",
+fn check_env_var_for_val(env_var_key: &str, expected_value: &str) -> bool {
+    match env::var_os(env_var_key) {
+        Some(val) => val == expected_value,
         None => false
     }
+}
+
+/// Identify whether we were launched through a Steam environment.
+fn launched_from_steam() -> bool {
+    check_env_var_for_val("SteamEnv", "1")
 }
 
 /// Identify whether we are running on Steam Deck.
 fn is_steam_deck() -> bool {
-    match env::var_os("SteamDeck") {
-        Some(val) => val == "1",
-        None => false
-    }
+    check_env_var_for_val("SteamDeck", "1")
 }
 
 /// Identify whether we were launched through a SteamOS environment.
 fn is_steam_os() -> bool {
-    match env::var_os("SteamOS") {
-        Some(val) => val == "1",
-        None => false
-    }
+    check_env_var_for_val("SteamOS", "1")
 }
 
 /// Prefix updates are disabled on Steam, as we assume the runners are Proton-spec and manage that.
@@ -90,7 +88,9 @@ fn get_library_search_roots() -> Option<Vec<PathBuf>> {
             Some(steam_install_dir.libraryfolders().paths
                 .clone().into_iter()
                 .map(|single_path| single_path.join("common"))
-                .collect::<Vec<PathBuf>>())
+                .collect::<Vec<PathBuf>>()
+            )
+
         }
         None => None
     }
@@ -106,27 +106,27 @@ fn get_homedir_search_roots() -> Option<PathBuf> {
 }
 
 fn check_pld(_ld: PathBuf) -> Option<PathBuf> {
-    let _pld = PathBuf::from(_ld);
-    match _pld.is_dir() // is it a directory that contains things
-            && !_pld.is_symlink() // is it NOT a symlink (don't inventory dopplegangers)
-            && _pld.join("proton").exists() // does the directory contain a proton launch script/file?
+    let pld = PathBuf::from(_ld);
+    match pld.is_dir() // is it a directory that contains things
+            && !pld.is_symlink() // is it NOT a symlink (don't inventory doppelgangers)
+            && pld.join("proton").exists() // does the directory contain a proton launch script/file?
     {
-        true => Some(_pld),
+        true => Some(pld),
         false => None
     }
 }
 
-fn check_root(_local: PathBuf) -> Option<Vec<PathBuf>> {
-    let mut _processed: Vec<PathBuf> = Vec::new();
-    if _local.exists() && _local.is_dir() {
-        for _ld in _local.read_dir().unwrap() {
+fn check_root(local: PathBuf) -> Option<Vec<PathBuf>> {
+    let mut processed: Vec<PathBuf> = Vec::new();
+    if local.exists() && local.is_dir() {
+        for _ld in local.read_dir().unwrap() {
             match check_pld(_ld.unwrap().path()) {
-                Some(_pld) => _processed.push(_pld),
+                Some(_pld) => processed.push(_pld),
                 None => {}
             }
         }
     }
-    Some(_processed)
+    Some(processed)
 }
 
 /// Inventory all possible Proton launchers in search roots.
@@ -185,10 +185,7 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<components::wine::Gr
                 compact_launch: true,
                 command: Some(String::from("python3 '%build%/proton' waitforexitandrun")),
                 managed_prefix: match env::var_os("STEAM_COMPAT_DATA_PATH") {
-                    Some(val) => {
-                        tracing::debug!("MAYBE HAZ? {0}", val.to_str().unwrap());
-                        Some(PathBuf::from(val))
-                    },
+                    Some(val) => Some(PathBuf::from(val)),
                     None => None
                 },
                 ..components::wine::Features::default()
@@ -203,7 +200,7 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<components::wine::Gr
                             wines.push(components::wine::Version {
                                 name: wine_name,   // clarify
                                 title: wine_title,  // clarify
-                                uri: (&path.to_str().unwrap()).trim().to_string(), // clarify
+                                uri: (&path.to_str().unwrap()).trim().to_string(), // clarify?
                                 format: None,
                                 files: components::wine::Files { // handled by wincompatlib
                                     wine: "proton".to_string(),
@@ -211,7 +208,8 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<components::wine::Gr
                                     wineserver: None,
                                     wineboot: None
                                 },
-                                features: Some(proton_features.clone()), // We have it aalread, and need it in ok.
+                                // We have it already, and need it in ok later.
+                                features: Some(proton_features.clone()),
                                 managed: true
                             });
                         },
