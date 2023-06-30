@@ -86,11 +86,14 @@ fn get_library_search_roots() -> Option<Vec<PathBuf>> {
     match SteamDir::locate() {
         Some(mut steam_install_dir) => {
             Some(steam_install_dir.libraryfolders().paths
-                .clone().into_iter()
+                .clone()
+                .into_iter()
                 .map(|single_path| single_path.join("common"))
+                .chain(
+                    [steam_install_dir.path.clone().join("compatibilitytools.d")].to_vec().into_iter()
+                )
                 .collect::<Vec<PathBuf>>()
             )
-
         }
         None => None
     }
@@ -132,13 +135,6 @@ fn check_root(local: PathBuf) -> Option<Vec<PathBuf>> {
 /// Inventory all possible Proton launchers in search roots.
 fn filter_local_roots_by_proton_launcher() -> Option<Vec<PathBuf>> {
     let mut _processed: Vec<PathBuf> = Vec::new();
-    match get_homedir_search_roots() {
-        None => {},
-        Some(_local) => match check_root(_local) {
-            Some(_root) => _processed.extend(_root),
-            None => {}
-        }
-    }
     match get_library_search_roots() {
         None => { },
         Some(_locals) => {
