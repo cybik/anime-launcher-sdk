@@ -153,6 +153,29 @@ fn filter_local_roots_by_proton_launcher() -> Option<Vec<PathBuf>> {
     Some(_processed)
 }
 
+fn get_split_names(path: PathBuf) -> (Option<String>, Option<String>) {
+    // per rust.
+    let binding = fs::read_to_string(path.join("version")).expect(
+    format!("Should have been able to read the file for {0}",
+        path.display()).as_str()
+    );
+    let version_file : Vec<&str> = binding.split(" ").collect();
+
+    match version_file.len() > 1 {
+        true => match path.file_name() {
+            Some(file_path) => match file_path.to_str() {
+                Some(path_name) => (
+                    Some(path_name.to_string()),
+                    Some(version_file.get(1).expect("ta chevre").trim().to_string())
+                ),
+                None => (None, None)
+            },
+            None => (None, None)
+        },
+        false => (None, None)
+    }
+}
+
 /// Generate a list of WinCompatLib Structs for inventoried Steam-managed, detected Proton installs
 pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<components::wine::Group>> {
     match filter_local_roots_by_proton_launcher() {
@@ -172,37 +195,31 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<components::wine::Gr
             };
             let mut wines: Vec<components::wine::Version> = Vec::new();
             for path in paths {
-                let version_file = fs::read_to_string(path.join("version")).expect(
-                format!("Should have been able to read the file for {0}",
-                    path.display()).as_str()
-                );
-
-                let split : Vec<&str> = version_file.split(" ").collect();
-                if split.len() < 2 { continue; } // Proton so old the version file broke spec.
-
-                let name = match path.file_name() {
-                    Some(file_path) => match file_path.to_str(){
-                        Some(path_name) => path_name.to_string(),
-                        None => anyhow::bail!("Bad file entry somehow")
+                let (_wine_title, _wine_name) = get_split_names(path.clone());
+                match _wine_name {
+                    Some(wine_name)=> match _wine_title {
+                        Some(wine_title)=> {
+                            // Let's gooooo!
+                            wines.push(components::wine::Version {
+                                name: wine_name,   // clarify
+                                title: wine_title,  // clarify
+                                uri: (&path.to_str().unwrap()).trim().to_string(), // clarify
+                                format: None,
+                                files: components::wine::Files { // handled by wincompatlib
+                                    wine: "proton".to_string(),
+                                    wine64: None,
+                                    wineserver: None,
+                                    wineboot: None
+                                },
+                                features: Some(proton_features.clone()), // We have it aalread, and need it in ok.
+                                managed: true
+                            });
+                        },
+                        None => continue
                     },
-                    None => anyhow::bail!("Bad file entry somehow")
-                };
+                    None => continue
+                }
 
-                // Let's gooooo!
-                wines.push(components::wine::Version {
-                    name: split.get(1).expect("Should really be set right now").trim().to_string(),   // clarify
-                    title: name.clone().trim().to_string(),  // clarify
-                    uri: (&path.to_str().unwrap()).trim().to_string(), // clarify
-                    format: None,
-                    files: components::wine::Files { // handled by wincompatlib
-                        wine: "proton".to_string(),
-                        wine64: None,
-                        wineserver: None,
-                        wineboot: None
-                    },
-                    features: Some(proton_features.clone()), // handled
-                    managed: true
-                });
             }
             Ok([
                 components::wine::Group {
