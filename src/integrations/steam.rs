@@ -3,7 +3,6 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 use crate::components;
-use crate::components::wine;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LaunchedFrom {
@@ -155,63 +154,68 @@ fn filter_local_roots_by_proton_launcher() -> Option<Vec<PathBuf>> {
 }
 
 /// Generate a list of WinCompatLib Structs for inventoried Steam-managed, detected Proton installs
-pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<wine::Group>> {
-    let mut wines: Vec<wine::Version> = Vec::new();
+pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<components::wine::Group>> {
+    match filter_local_roots_by_proton_launcher() {
+        Some(paths) => {
+            let proton_features = components::wine::Features {
+                bundle: Some(components::wine::Bundle::Proton),
+                compact_launch: true,
+                command: Some(String::from("python3 '%build%/proton' waitforexitandrun")),
+                managed_prefix: match env::var_os("STEAM_COMPAT_DATA_PATH") {
+                    Some(val) => {
+                        tracing::debug!("MAYBE HAZ? {0}", val.to_str().unwrap());
+                        Some(PathBuf::from(val))
+                    },
+                    None => None
+                },
+                ..components::wine::Features::default()
+            };
+            let mut wines: Vec<components::wine::Version> = Vec::new();
+            for path in paths {
+                let version_file = fs::read_to_string(path.join("version")).expect(
+                format!("Should have been able to read the file for {0}",
+                    path.display()).as_str()
+                );
 
-    let mut proton_features = components::wine::Features::default();
-    proton_features.bundle = Some(components::wine::Bundle::Proton);
-    proton_features.compact_launch = true;
-    proton_features.command = Some(String::from("python3 '%build%/proton' waitforexitandrun"));
-    match env::var_os("STEAM_COMPAT_DATA_PATH") {
-        Some(val) => {
-            tracing::debug!("MAYBE HAZ? {0}", val.to_str().unwrap());
-            proton_features.managed_prefix = Some(PathBuf::from(val));
+                let split : Vec<&str> = version_file.split(" ").collect();
+                if split.len() < 2 { continue; } // Proton so old the version file broke spec.
+
+                let name = match path.file_name() {
+                    Some(file_path) => match file_path.to_str(){
+                        Some(path_name) => path_name.to_string(),
+                        None => anyhow::bail!("Bad file entry somehow")
+                    },
+                    None => anyhow::bail!("Bad file entry somehow")
+                };
+
+                // Let's gooooo!
+                wines.push(components::wine::Version {
+                    name: split.get(1).expect("Should really be set right now").trim().to_string(),   // clarify
+                    title: name.clone().trim().to_string(),  // clarify
+                    uri: (&path.to_str().unwrap()).trim().to_string(), // clarify
+                    format: None,
+                    files: components::wine::Files { // handled by wincompatlib
+                        wine: "proton".to_string(),
+                        wine64: None,
+                        wineserver: None,
+                        wineboot: None
+                    },
+                    features: Some(proton_features.clone()), // handled
+                    managed: true
+                });
+            }
+            Ok([
+                components::wine::Group {
+                    name:"steam-proton".to_string(),
+                    title:"Proton Runners via Steam".to_string(),
+                    features: Some(proton_features.clone()), // handled
+                    versions: wines,
+                    managed: true
+                }
+            ].to_vec())
         },
-        None => {}
-    };
-    for path in filter_local_roots_by_proton_launcher().unwrap() {
-        let version_file = fs::read_to_string(path.join("version"))
-            .expect(format!("Should have been able to read the file for {0}", path.display()).as_str());
-        let split : Vec<&str> = version_file.split(" ").collect();
-        if split.len() < 2 {
-            // oof.
-            tracing::debug!("Proton at {0} is so old the version file doesn't follow spec. Skipping.", (&path.to_str().unwrap()).to_string());
-            continue;
-        }
-
-        let name = match path.file_name() {
-            Some(file_path) => match file_path.to_str(){
-                Some(path_name) => path_name.to_string(),
-                None => anyhow::bail!("Bad file entry somehow")
-            },
-            None => anyhow::bail!("Bad file entry somehow")
-        };
-
-        // Let's gooooo!
-        wines.push(wine::Version {
-            name: split.get(1).expect("Should really be set right now").trim().to_string(),   // clarify
-            title: name.clone().trim().to_string(),  // clarify
-            uri: (&path.to_str().unwrap()).trim().to_string(), // clarify
-            format: Option::None,
-            files: wine::Files { // handled by wincompatlib
-                wine: "proton".to_string(),
-                wine64: None,
-                wineserver: None,
-                wineboot: None
-            },
-            features: Some(proton_features.clone()), // handled
-            managed: true
-        });
+        None => Err(anyhow::anyhow!("Steam mode active but no roots?"))
     }
-    let mut wine_groups: Vec<wine::Group> = Vec::with_capacity(1);
-    wine_groups.push(wine::Group {
-        name:"steam-proton".to_string(),
-        title:"Proton Runners via Steam".to_string(),
-        features: Some(proton_features.clone()), // handled
-        versions: wines,
-        managed: true
-    });
-    Ok(wine_groups)
 }
 
 /// Get a list of Proton paths to sleuth into.
