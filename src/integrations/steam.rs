@@ -43,26 +43,26 @@ pub fn launched_from() -> LaunchedFrom {
 
 /// Identify whether we were launched through a Steam environment.
 fn launched_from_steam() -> bool {
-    return match env::var_os("SteamEnv") {
+    match env::var_os("SteamEnv") {
         Some(val) => val == "1",
         None => false
-    };
+    }
 }
 
 /// Identify whether we are running on Steam Deck.
 fn is_steam_deck() -> bool {
-    return match env::var_os("SteamDeck") {
+    match env::var_os("SteamDeck") {
         Some(val) => val == "1",
         None => false
-    };
+    }
 }
 
 /// Identify whether we were launched through a SteamOS environment.
 fn is_steam_os() -> bool {
-    return match env::var_os("SteamOS") {
+    match env::var_os("SteamOS") {
         Some(val) => val == "1",
         None => false
-    };
+    }
 }
 
 /// Prefix updates are disabled on Steam, as we assume the runners are Proton-spec and manage that.
@@ -83,38 +83,75 @@ pub fn default_window_size_height(default: i32) -> i32 {
         false => default
     }
 }
-
 /// Generate a list of Steam-inventoried search roots.
-fn get_local_search_roots() -> Vec<PathBuf> {
+fn get_library_search_roots() -> Option<Vec<PathBuf>> {
     // initialize and let Steam seed itself.
-    let mut _steamdir : SteamDir = SteamDir::locate().unwrap();
-    _steamdir.libraryfolders();
-
-    let mut _vec_steam_managed_protons : Vec<PathBuf> = Vec::new();
-    _vec_steam_managed_protons.push(_steamdir.path.clone().join("compatibilitytools.d"));
-    for _path in &_steamdir.libraryfolders().paths {
-        _vec_steam_managed_protons.push(_path.clone().join("common"));
+    match SteamDir::locate() {
+        Some(mut steam_install_dir) => {
+            Some(steam_install_dir.libraryfolders().paths
+                .clone().into_iter()
+                .map(|single_path| single_path.join("common"))
+                .collect::<Vec<PathBuf>>())
+        }
+        None => None
     }
-    return _vec_steam_managed_protons;
+}
+
+fn get_homedir_search_roots() -> Option<PathBuf> {
+    match SteamDir::locate() {
+        Some(steam_install_dir) => {
+            Some(steam_install_dir.path.clone().join("compatibilitytools.d"))
+        }
+        None => None
+    }
+}
+
+fn check_pld(_ld: PathBuf) -> Option<PathBuf> {
+    let _pld = PathBuf::from(_ld);
+    match _pld.is_dir() // is it a directory that contains things
+            && !_pld.is_symlink() // is it NOT a symlink (don't inventory dopplegangers)
+            && _pld.join("proton").exists() // does the directory contain a proton launch script/file?
+    {
+        true => Some(_pld),
+        false => None
+    }
+}
+
+fn check_root(_local: PathBuf) -> Option<Vec<PathBuf>> {
+    let mut _processed: Vec<PathBuf> = Vec::new();
+    if _local.exists() && _local.is_dir() {
+        for _ld in _local.read_dir().unwrap() {
+            match check_pld(_ld.unwrap().path()) {
+                Some(_pld) => _processed.push(_pld),
+                None => {}
+            }
+        }
+    }
+    Some(_processed)
 }
 
 /// Inventory all possible Proton launchers in search roots.
-fn filter_local_roots_by_proton_launcher() -> Vec<PathBuf> {
+fn filter_local_roots_by_proton_launcher() -> Option<Vec<PathBuf>> {
     let mut _processed: Vec<PathBuf> = Vec::new();
-    for _local in get_local_search_roots() {
-        if _local.exists() && _local.is_dir() {
-            for _ld in _local.read_dir().unwrap() {
-                let _pld = PathBuf::from(_ld.unwrap().path());
-                if _pld.is_dir() // is it a directory that contains things
-                    && !_pld.is_symlink() // is it NOT a symlink (don't inventory dopplegangers)
-                    && _pld.join("proton").exists() // does the directory contain a proton launch script/file?
-                {
-                    _processed.push(_pld.clone()) // aye, we got a culprit
+    match get_homedir_search_roots() {
+        None => {},
+        Some(_local) => match check_root(_local) {
+            Some(_root) => _processed.extend(_root),
+            None => {}
+        }
+    }
+    match get_library_search_roots() {
+        None => { },
+        Some(_locals) => {
+            for _local in _locals {
+                match check_root(_local) {
+                    Some(_root) => _processed.extend(_root),
+                    None => {}
                 }
             }
         }
     }
-    return _processed;
+    Some(_processed)
 }
 
 /// Generate a list of WinCompatLib Structs for inventoried Steam-managed, detected Proton installs
@@ -132,9 +169,9 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<wine::Group>> {
         },
         None => {}
     };
-    for path in filter_local_roots_by_proton_launcher() {
+    for path in filter_local_roots_by_proton_launcher().unwrap() {
         let version_file = fs::read_to_string(path.join("version"))
-            .expect("Should have been able to read the file");
+            .expect(format!("Should have been able to read the file for {0}", path.display()).as_str());
         let split : Vec<&str> = version_file.split(" ").collect();
         if split.len() < 2 {
             // oof.
@@ -179,8 +216,8 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<wine::Group>> {
 
 /// Get a list of Proton paths to sleuth into.
 pub fn steam_proton_installed_paths() -> Option<Vec<PathBuf>> {
-    if !launched_from_steam() || SteamDir::locate().is_none() {
-        return None
+    match !launched_from_steam() || SteamDir::locate().is_none() {
+        true => None,
+        false => filter_local_roots_by_proton_launcher()
     }
-    Some(filter_local_roots_by_proton_launcher())
 }
