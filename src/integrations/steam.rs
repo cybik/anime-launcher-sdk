@@ -99,15 +99,6 @@ fn get_library_search_roots() -> Option<Vec<PathBuf>> {
     }
 }
 
-fn get_homedir_search_roots() -> Option<PathBuf> {
-    match SteamDir::locate() {
-        Some(steam_install_dir) => {
-            Some(steam_install_dir.path.clone().join("compatibilitytools.d"))
-        }
-        None => None
-    }
-}
-
 fn check_pld(_ld: PathBuf) -> Option<PathBuf> {
     let pld = PathBuf::from(_ld);
     match pld.is_dir() // is it a directory that contains things
@@ -150,25 +141,26 @@ fn filter_local_roots_by_proton_launcher() -> Option<Vec<PathBuf>> {
 }
 
 fn get_split_names(path: PathBuf) -> (Option<String>, Option<String>) {
-    // per rust.
-    let binding = fs::read_to_string(path.join("version")).expect(
-    format!("Should have been able to read the file for {0}",
-        path.display()).as_str()
-    );
-    let version_file : Vec<&str> = binding.split(" ").collect();
-
-    match version_file.len() > 1 {
-        true => match path.file_name() {
-            Some(file_path) => match file_path.to_str() {
-                Some(path_name) => (
-                    Some(path_name.to_string()),
-                    Some(version_file.get(1).expect("ta chevre").trim().to_string())
-                ),
-                None => (None, None)
-            },
-            None => (None, None)
+    match fs::read_to_string(path.join("version")).expect(
+        format!("Should have been able to read the file for {0}", path.display()).as_str()
+    ).split_once(" ") {
+        Some((_sz, proton_name)) => {
+            match proton_name.is_empty() {
+                false => {
+                    match path.file_name() {
+                        Some(file_path) => match file_path.to_str() {
+                            Some(path_name) => (
+                                Some(path_name.to_string()), Some(proton_name.to_string())
+                            ),
+                            None => (None, None)
+                        },
+                        None => (None, None)
+                    }
+                },
+                true => (None, None)
+            }
         },
-        false => (None, None)
+        None => (None, None)
     }
 }
 
