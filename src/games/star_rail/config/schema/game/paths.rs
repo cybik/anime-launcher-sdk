@@ -7,6 +7,9 @@ use anime_game_core::star_rail::consts::GameEdition;
 
 use crate::star_rail::consts::launcher_dir;
 
+use crate::integrations::steam;
+use crate::star_rail::consts::base_game_install_dir;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Paths {
     pub global: PathBuf,
@@ -26,10 +29,13 @@ impl Paths {
 
 impl Default for Paths {
     fn default() -> Self {
-        let launcher_dir = launcher_dir().expect("Failed to get launcher dir");
+        let launcher_dir = base_game_install_dir().expect("Failed to get launcher dir");
 
         Self {
-            global: launcher_dir.join("HSR"),
+            global: match steam::launched_from() {
+                steam::LaunchedFrom::Independent => launcher_dir.join("HSR"),
+                steam::LaunchedFrom::Steam => launcher_dir.join("StarRail").join("Games")
+            },
             china: launcher_dir.join("HSR China")
         }
     }
