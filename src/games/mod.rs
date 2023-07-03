@@ -9,3 +9,5 @@ pub mod honkai;
 
 #[cfg(feature = "pgr")]
 pub mod pgr;
+
+pub mod common;
