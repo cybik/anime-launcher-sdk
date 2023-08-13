@@ -27,12 +27,25 @@ impl Paths {
     }
 }
 
+/// NOTE: These paths can be whatever we set or need.
+///       These are only sane defaults provided out of
+///       necessity
 fn concat_gen_shin() -> String {
-    format!("{}{}{} {}{}","Ge", "nshi", "n", "Imp", "act")
+    format!("{}{}{} {}{}", "Ge", "nshi", "n", "Imp", "act")
 }
 
 fn concat_gen_shin_game() -> String {
     format!("{} {}", concat_gen_shin(), "game")
+}
+
+fn get_global_launchdir(launcher_dir: PathBuf) -> PathBuf {
+    match steam::launched_from() {
+        steam::LaunchedFrom::Independent => launcher_dir
+            .join(concat_gen_shin()),
+        steam::LaunchedFrom::Steam => launcher_dir
+            .join(concat_gen_shin())
+            .join(concat_gen_shin_game())
+    }
 }
 
 impl Default for Paths {
@@ -40,11 +53,8 @@ impl Default for Paths {
         let launcher_dir = base_game_install_dir().expect("Failed to get launcher dir");
 
         Self {
-            global: match steam::launched_from() {
-                steam::LaunchedFrom::Independent => launcher_dir.join(concat_gen_shin()),
-                steam::LaunchedFrom::Steam => launcher_dir.join(concat_gen_shin()).join(concat_gen_shin_game()),
-            },
-            china: launcher_dir.join(concat!("Yu", "anS", "hen")) // TODO: autogen Steam
+            global: get_global_launchdir(launcher_dir),
+            china: launcher_dir.join(concat!("Yu", "anS", "hen")) // TODO: autogen Steam?
         }
     }
 }
