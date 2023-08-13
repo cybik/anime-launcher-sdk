@@ -53,8 +53,8 @@ impl Default for Paths {
         let launcher_dir = base_game_install_dir().expect("Failed to get launcher dir");
 
         Self {
-            global: get_global_launchdir(launcher_dir),
-            china: launcher_dir.join(concat!("Yu", "anS", "hen")) // TODO: autogen Steam?
+            global: get_global_launchdir(launcher_dir.clone()),
+            china: launcher_dir.clone().join(concat!("Yu", "anS", "hen")) // TODO: autogen Steam?
         }
     }
 }
