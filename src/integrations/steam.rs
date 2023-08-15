@@ -44,7 +44,16 @@ pub fn aagl_launcher_launch_dir() -> Option<std::io::Result<PathBuf>> {
 
 pub fn aagl_launcher_launch_target() -> Option<OsString> {
     match launched_from() {
-        LaunchedFrom::Steam => env::var_os("AAGL_STEAM_EXEC_ARG"),
+        LaunchedFrom::Steam => {
+            /*let exec_arg_c : Vec<String> = env::args().filter(|arg| arg.starts_with("--launch-command=")).collect();
+            let exec_arg : Vec<&str> = exec_arg_c[0].split("=").collect::<Vec<&str>>();
+            Some(exec_arg[1].into())*/
+            Some(env::args()
+                .filter(|arg| arg.starts_with("--launch-command="))
+                .collect::<Vec<String>>()[0]
+                .split("=")
+                .collect::<Vec<&str>>()[1].into())
+        },
         LaunchedFrom::Independent => None
     }
 }

@@ -16,7 +16,7 @@ pub fn base_install_dir(launcher_dir: PathBuf) -> anyhow::Result<PathBuf> {
                     Ok(PathBuf::from(target).parent().unwrap().to_path_buf())
                 },
                 None => {
-                    return Ok(match steam::get_steam_compatdata_cdrive_root() {
+                    Ok(match steam::get_steam_compatdata_cdrive_root() {
                         Some(path) => PathBuf::from(path),
                         None => launcher_dir
                     })
