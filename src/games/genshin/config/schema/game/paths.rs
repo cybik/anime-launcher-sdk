@@ -62,17 +62,23 @@ impl Default for Paths {
 impl From<&JsonValue> for Paths {
     fn from(value: &JsonValue) -> Self {
         let default = Self::default();
+        match steam::aagl_launcher_launch_target() {
+            None => Self {
+                global: value.get("global")
+                    .and_then(JsonValue::as_str)
+                    .map(PathBuf::from)
+                    .unwrap_or(default.global),
 
-        Self {
-            global: value.get("global")
-                .and_then(JsonValue::as_str)
-                .map(PathBuf::from)
-                .unwrap_or(default.global),
-
-            china: value.get("china")
-                .and_then(JsonValue::as_str)
-                .map(PathBuf::from)
-                .unwrap_or(default.china),
+                china: value.get("china")
+                    .and_then(JsonValue::as_str)
+                    .map(PathBuf::from)
+                    .unwrap_or(default.china),
+            },
+            Some(target_exe) => Self {
+                global: PathBuf::from(target_exe.clone()).parent().unwrap().to_path_buf(),
+                china: PathBuf::from(target_exe).parent().unwrap().to_path_buf(),
+            }
         }
+
     }
 }
