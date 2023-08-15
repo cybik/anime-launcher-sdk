@@ -20,9 +20,12 @@ impl Paths {
     #[inline]
     /// Get game path for given edition
     pub fn for_edition(&self, edition: impl Into<GameEdition>) -> &Path {
-        match edition.into() {
-            GameEdition::Global => self.global.as_path(),
-            GameEdition::China => self.china.as_path()
+        match steam::aagl_launcher_launch_dir() {
+            Some(dir) => dir.unwrap().as_path(),
+            None => match edition.into() {
+                GameEdition::Global => self.global.as_path(),
+                GameEdition::China => self.china.as_path()
+            }
         }
     }
 }
