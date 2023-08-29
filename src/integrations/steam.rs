@@ -73,7 +73,7 @@ fn check_env_var_for_val(env_var_key: &str, expected_value: &str) -> bool {
 }
 
 /// Identify whether we were launched through a Steam environment.
-fn launched_from_steam() -> bool {
+pub fn launched_from_steam() -> bool {
     check_env_var_for_val("SteamEnv", "1")
 }
 

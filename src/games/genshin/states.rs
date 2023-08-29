@@ -130,7 +130,7 @@ impl LauncherState {
                         true
                     });
 
-                if !disabled && params.use_patch {
+                if !disabled {
                     return Ok(Self::TelemetryNotDisabled);
                 }
 
