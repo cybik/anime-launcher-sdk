@@ -84,10 +84,10 @@ pub fn run() -> anyhow::Result<()> {
     tracing::info!("Checking telemetry");
 
     if let Ok(Some(server)) = telemetry::is_disabled(config.launcher.edition) {
-        if config.patch.apply {
-            return Err(anyhow::anyhow!("Telemetry server is not disabled: {server}"));
+        if config.launcher.permissive {
+            tracing::warn!("Telemetry server \"{server}\" is not disabled but launcher is set to permissive.");
         } else {
-            tracing::warn!("Telemetry server is not disabled ({server}) but patch is disabled.");
+            return Err(anyhow::anyhow!("Telemetry server is not disabled: {server}"));
         }
     }
 
