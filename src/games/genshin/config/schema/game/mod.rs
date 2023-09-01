@@ -135,7 +135,7 @@ impl From<&JsonValue> for Game {
 
             telemetry_ignored: value.get("telemetry_ignored")
                 .and_then(JsonValue::as_bool)
-                .unwrap_or(default.fast)
+                .unwrap_or(default.telemetry_ignored)
         }
     }
 }
