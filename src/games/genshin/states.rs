@@ -23,7 +23,6 @@ pub enum LauncherState {
     },
 
     TelemetryNotDisabled,
-    TelemetryNotDisabledButIgnored,
 
     #[cfg(feature = "components")]
     WineNotInstalled,
@@ -132,11 +131,8 @@ impl LauncherState {
                         true
                     });
 
-                if !disabled {
-                    return match params.telemetry_ignored {
-                        false => Ok(Self::TelemetryNotDisabled),
-                        true => Ok(Self::TelemetryNotDisabledButIgnored)
-                    }
+                if !disabled && !params.telemetry_ignored{
+                    return Ok(Self::TelemetryNotDisabled);
                 }
 
                 // Check if update predownload available
