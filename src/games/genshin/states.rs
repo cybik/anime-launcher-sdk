@@ -23,6 +23,7 @@ pub enum LauncherState {
     },
 
     TelemetryNotDisabled,
+    TelemetryNotDisabledButIgnored,
 
     #[cfg(feature = "components")]
     WineNotInstalled,
@@ -62,7 +63,8 @@ pub struct LauncherStateParams<F: Fn(StateUpdating)> {
     pub wine_prefix: PathBuf,
     pub selected_voices: Vec<VoiceLocale>,
 
-    pub status_updater: F
+    pub status_updater: F,
+    pub telemetry_ignored: bool
 }
 
 impl LauncherState {
@@ -131,7 +133,10 @@ impl LauncherState {
                     });
 
                 if !disabled {
-                    return Ok(Self::TelemetryNotDisabled);
+                    return match params.telemetry_ignored {
+                        false => Ok(Self::TelemetryNotDisabled),
+                        true => Ok(Self::TelemetryNotDisabledButIgnored)
+                    }
                 }
 
                 // Check if update predownload available
@@ -195,6 +200,7 @@ impl LauncherState {
 
             wine_prefix: config.get_wine_prefix_path(),
             selected_voices: voices,
+            telemetry_ignored: config.game.telemetry_ignored,
 
             status_updater
         })
