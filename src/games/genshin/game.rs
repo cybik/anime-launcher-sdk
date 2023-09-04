@@ -74,7 +74,7 @@ pub fn run() -> anyhow::Result<()> {
 
     let mut folders = Folders {
         wine: wine.get_runner_dir(config.game.wine.builds.clone()),
-        prefix: config.game.wine.prefix.clone(),
+        prefix: wine.get_prefix_dir(config.game.wine.prefix.clone()),
         game: config.game.path.for_edition(config.launcher.edition).to_path_buf(),
         temp: config.launcher.temp.clone().unwrap_or(std::env::temp_dir())
     };
