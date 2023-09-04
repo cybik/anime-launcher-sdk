@@ -172,7 +172,7 @@ impl Version {
         match self.managed {
             true => match self.features.as_ref() {
                 Some(feats) => match feats.managed_prefix.as_ref() {
-                    Some(prefix) => prefix.into(),
+                    Some(prefix) => prefix.join("pfx").into(),
                     None => prefix_dir.into()
                 },
                 None => prefix_dir.into()
