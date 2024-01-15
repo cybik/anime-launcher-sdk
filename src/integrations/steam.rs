@@ -106,6 +106,16 @@ pub fn default_window_size_height(default: i32) -> i32 {
     }
 }
 
+pub fn valid_selected_runner(selected: &String) -> bool {
+    for proton in &get_proton_installs_as_wines().unwrap()[0].versions {
+        if selected.eq(&proton.name) {
+            return true
+        }
+    }
+    tracing::error!("SELECTED RUNNER INVALID :: {}", selected);
+    false
+}
+
 pub fn get_steam_compatdata_cdrive_root() -> Option<String> {
     match get_steam_compat_path() {
         None => None,

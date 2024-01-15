@@ -2,9 +2,12 @@ use std::path::PathBuf;
 
 use anime_game_core::prelude::*;
 use anime_game_core::genshin::prelude::*;
+use serde::de::Unexpected::Str;
 
 use crate::config::ConfigExt;
 use crate::genshin::config::Config;
+use crate::integrations::steam;
+use crate::integrations::steam::LaunchedFrom;
 
 #[derive(Debug, Clone)]
 pub enum LauncherState {
@@ -162,23 +165,44 @@ impl LauncherState {
 
         let config = Config::get()?;
 
-        match &config.game.wine.selected {
-            #[cfg(feature = "components")]
+        // early check
+        match config.get_selected_wine()? {
             Some(selected) => {
-                if !config.game.wine.builds.join(selected).exists() {
-                    match config.get_selected_wine()? {
-                        Some(selected) => {
-                            if !selected.managed {
-                                return Ok(Self::WineNotInstalled);
-                            }
-                        },
-                        None => {}
-                    }
+                if selected.managed {
+                    tracing::debug!(
+                        "DEBUG: runner dir {:?} :: managed somehow",
+                        selected.get_runner_dir(config.game.wine.builds.clone())
+                    );
                 }
             }
-            None => return Ok(Self::WineNotInstalled),
+            None => {
+                // noop
+            }
+        }
 
-            _ => ()
+        match steam::launched_from() {
+            LaunchedFrom::Steam => {
+                match &config.game.wine.selected {
+                    #[cfg(feature = "components")]
+                    Some(selected) if !steam::valid_selected_runner(selected)
+                        => return Ok(Self::WineNotInstalled),
+                    None
+                        => return Ok(Self::WineNotInstalled),
+                    _
+                    => ()
+                }
+            },
+            LaunchedFrom::Independent => {
+                match &config.game.wine.selected {
+                    #[cfg(feature = "components")]
+                    Some(selected) if !config.game.wine.builds.join(selected).exists()
+                        => return Ok(Self::WineNotInstalled),
+                    None
+                        => return Ok(Self::WineNotInstalled),
+                    _
+                        => ()
+                }
+            }
         }
 
         let mut voices = Vec::with_capacity(config.game.voices.len());
