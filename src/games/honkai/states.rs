@@ -187,6 +187,7 @@ impl LauncherState {
 
             patch_folder: config.patch.path,
             apply_mfplat: config.patch.apply_mfplat,
+            telemetry_ignored: config.game.telemetry_ignored,
 
             status_updater
         })

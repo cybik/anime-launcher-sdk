@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use crate::games::common;
+use crate::integrations::steam;
 
 pub const FOLDER_NAME: &str = "honkers-launcher";
 
@@ -9,7 +10,10 @@ pub const FOLDER_NAME: &str = "honkers-launcher";
 /// Generate a sane, possible, "relative to the prefix's C:\ root" install target for games that
 ///  need such a location to install the game(s) in.
 pub fn base_game_install_dir() -> anyhow::Result<PathBuf> {
-    common::base_install_dir(launcher_dir().unwrap())
+    match steam::steam_managed_installed_game() {
+        Some(val) => Ok(PathBuf::from(val)), // We're handling a pure Steam install. Neat.
+        None => common::base_install_dir(launcher_dir().unwrap())
+    }
 }
 
 /// Get default launcher dir path

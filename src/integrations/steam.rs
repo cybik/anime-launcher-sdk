@@ -34,6 +34,19 @@ pub fn environment() -> Steam {
     }
 }
 
+pub fn is_install_managed_by_steam() -> bool {
+    match steam_managed_installed_game() {
+        Some(_) => true,
+        None => false
+    }
+}
+
+pub fn steam_managed_installed_game() -> Option<String> {
+    match std::env::var("STEAM_COMPAT_INSTALL_PATH") {
+        Ok(val) => Some(val.clone()), // We're handling a pure Steam install. Neat.
+        Err(_) => None
+    }
+}
 
 pub fn aagl_launcher_launch_dir() -> Option<std::io::Result<PathBuf>> {
     match launched_from() {
