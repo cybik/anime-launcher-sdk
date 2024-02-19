@@ -1,6 +1,16 @@
 use std::path::PathBuf;
 
+use crate::games::common;
+
 pub const FOLDER_NAME: &str = "honkers-launcher";
+
+/// Get assumed Steam Prefix install path
+///
+/// Generate a sane, possible, "relative to the prefix's C:\ root" install target for games that
+///  need such a location to install the game(s) in.
+pub fn base_game_install_dir() -> anyhow::Result<PathBuf> {
+    common::base_install_dir(launcher_dir().unwrap())
+}
 
 /// Get default launcher dir path
 /// 
@@ -11,8 +21,10 @@ pub fn launcher_dir() -> anyhow::Result<PathBuf> {
     }
 
     Ok(std::env::var("XDG_DATA_HOME")
-        .or_else(|_| std::env::var("HOME").map(|home| home + "/.local/share"))
-        .map(|home| PathBuf::from(home).join(FOLDER_NAME))?)
+        .or_else(|_| std::env::var("HOME")
+        .map(|home| home + "/.local/share"))
+        .map(|home| PathBuf::from(home)
+        .join(FOLDER_NAME))?)
 }
 
 /// Get launcher's cache dir path
@@ -24,8 +36,10 @@ pub fn cache_dir() -> anyhow::Result<PathBuf> {
     }
 
     Ok(std::env::var("XDG_CACHE_HOME")
-        .or_else(|_| std::env::var("HOME").map(|home| home + "/.cache"))
-        .map(|home| PathBuf::from(home).join(FOLDER_NAME))?)
+        .or_else(|_| std::env::var("HOME")
+        .map(|home| home + "/.cache"))
+        .map(|home| PathBuf::from(home)
+        .join(FOLDER_NAME))?)
 }
 
 /// Get config file path

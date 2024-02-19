@@ -25,6 +25,7 @@ pub mod prelude {
 }
 
 use prelude::*;
+use crate::integrations::steam;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Ordinalize, Serialize, Deserialize)]
 pub enum LauncherStyle {
@@ -61,6 +62,8 @@ pub struct Launcher {
     pub temp: Option<PathBuf>,
     pub repairer: Repairer,
 
+    pub permissive: bool,
+
     #[cfg(feature = "discord-rpc")]
     pub discord_rpc: DiscordRpc,
 
@@ -76,6 +79,8 @@ impl Default for Launcher {
             style: LauncherStyle::default(),
             temp: launcher_dir().ok(),
             repairer: Repairer::default(),
+
+            permissive: steam::launched_from_steam(),
 
             #[cfg(feature = "discord-rpc")]
             discord_rpc: DiscordRpc::default(),
@@ -122,6 +127,11 @@ impl From<&JsonValue> for Launcher {
             repairer: match value.get("repairer") {
                 Some(value) => Repairer::from(value),
                 None => default.repairer
+            },
+
+            permissive: match value.get("permissive") {
+                Some(value) => serde_json::from_value(value.to_owned()).unwrap_or_default(),
+                None => false
             },
 
             #[cfg(feature = "discord-rpc")]

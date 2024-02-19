@@ -64,8 +64,8 @@ pub fn run() -> anyhow::Result<()> {
     let features = wine.features(&config.components.path)?.unwrap_or_default();
 
     let mut folders = Folders {
-        wine: config.game.wine.builds.join(&wine.name),
-        prefix: config.game.wine.prefix.clone(),
+        wine: wine.get_runner_dir(config.game.wine.builds.clone()),
+        prefix: wine.get_prefix_dir(config.game.wine.prefix.clone()),
         game: game_path.clone(),
         patch: config.patch.path.clone(),
         temp: config.launcher.temp.clone().unwrap_or(std::env::temp_dir())
@@ -76,7 +76,11 @@ pub fn run() -> anyhow::Result<()> {
     tracing::info!("Checking telemetry");
 
     if let Ok(Some(server)) = telemetry::is_disabled(config.launcher.edition) {
-        return Err(anyhow::anyhow!("Telemetry server is not disabled: {server}"));
+        if config.game.telemetry_ignored {
+            tracing::warn!("Telemetry server \"{server}\" is not disabled but launcher is set to permissive.");
+        } else {
+            return Err(anyhow::anyhow!("Telemetry server is not disabled: {server}"));
+        }
     }
 
     // Prepare wine prefix drives

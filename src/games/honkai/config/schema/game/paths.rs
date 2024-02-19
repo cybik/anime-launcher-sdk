@@ -6,6 +6,9 @@ use serde_json::Value as JsonValue;
 use anime_game_core::honkai::consts::GameEdition;
 
 use crate::honkai::consts::launcher_dir;
+use crate::honkai::consts::base_game_install_dir;
+
+use crate::integrations::steam;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Paths {
@@ -15,6 +18,14 @@ pub struct Paths {
     pub taiwan: PathBuf,
     pub korea: PathBuf,
     pub japan: PathBuf
+}
+
+fn concat_hou_kai() -> String {
+    format!("{}{} {}{}","Hon", "kai", "Imp", "act")
+}
+
+fn concat_hou_kai_loc(loc: String) -> String {
+    format!("{} {}", concat_hou_kai(), loc)
 }
 
 impl Paths {
@@ -36,12 +47,12 @@ impl Default for Paths {
         let launcher_dir = launcher_dir().expect("Failed to get launcher dir");
 
         Self {
-            global: launcher_dir.join(concat!("Hon", "kai Imp", "act")),
-            sea:    launcher_dir.join(concat!("Hon", "kai Imp", "act Sea")),
-            china:  launcher_dir.join(concat!("Hon", "kai Imp", "act China")),
-            taiwan: launcher_dir.join(concat!("Hon", "kai Imp", "act Taiwan")),
-            korea:  launcher_dir.join(concat!("Hon", "kai Imp", "act Korea")),
-            japan:  launcher_dir.join(concat!("Hon", "kai Imp", "act Japan")),
+            global: launcher_dir.join(concat_hou_kai()),
+            sea:    launcher_dir.join(concat_hou_kai_loc("Sea")),
+            china:  launcher_dir.join(concat_hou_kai_loc("China")),
+            taiwan: launcher_dir.join(concat_hou_kai_loc("Taiwan")),
+            korea:  launcher_dir.join(concat_hou_kai_loc("Korea")),
+            japan:  launcher_dir.join(concat_hou_kai_loc("Japan")),
         }
     }
 }
