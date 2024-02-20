@@ -145,6 +145,8 @@ pub fn run() -> anyhow::Result<()> {
 
         windows_command = String::from("compact_launch.bat");
         launch_args = String::new();
+    } else {
+        tracing::info!("Compact launch disabled.");
     }
 
     // bwrap <params> -- <command to run>
