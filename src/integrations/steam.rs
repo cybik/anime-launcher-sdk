@@ -245,7 +245,7 @@ pub fn get_proton_installs_as_wines() -> anyhow::Result<Vec<components::wine::Gr
         Some(paths) => {
             let proton_features = components::wine::Features {
                 bundle: Some(components::wine::Bundle::Proton),
-                compact_launch: true,
+                compact_launch: false,
                 command: Some(String::from("python3 '%build%/proton' waitforexitandrun")),
                 managed_prefix: match get_steam_compat_path() {
                     Some(val) => Some(PathBuf::from(val)),
