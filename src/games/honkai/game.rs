@@ -75,10 +75,10 @@ pub fn run() -> anyhow::Result<()> {
 
     tracing::info!("Checking telemetry");
 
-    if let Ok(Some(server)) = telemetry::is_disabled(config.launcher.edition) {
-        if config.game.telemetry_ignored {
-            tracing::warn!("Telemetry server \"{server}\" is not disabled but launcher is set to permissive.");
-        } else {
+    if config.game.telemetry_ignored {
+        tracing::warn!("Telemetry state is ignored.");
+    } else {
+        if let Ok(Some(server)) = telemetry::is_disabled(config.launcher.edition) {
             return Err(anyhow::anyhow!("Telemetry server is not disabled: {server}"));
         }
     }
